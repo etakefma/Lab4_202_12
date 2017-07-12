@@ -27,6 +27,7 @@ public class GameLoopTask extends TimerTask {
     private static int squareDiv = 180;//distance between square corners to divide board
     private boolean inMotion = true;
     private boolean blockAdded = true;
+    private boolean gameDone = false;
 
 
 
@@ -39,6 +40,20 @@ public class GameLoopTask extends TimerTask {
         myRL =r;
         gbList.add(createBlock());
         gbList.add(createBlock());
+        /*gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());
+        gbList.add(createBlock());*/
 
 
     }
@@ -59,20 +74,20 @@ public class GameLoopTask extends TimerTask {
         int randX = squareDiv*randomInt.nextInt(4);
         int randY = squareDiv*randomInt.nextInt(4);
         for (int i = 0; i < gbList.size(); i++ ) {
-
+            Log.d("XPOS, YPOS LOOP", ""+(randX+blockOffset)+","+(randY+blockOffset)+","+i+","+gbList.get(i).getxPos()+","+gbList.get(i).getyPos());
             if((gbList.get(i).getyPos() == randY+blockOffset) &&(gbList.get(i).getxPos() == randX+blockOffset) )
             {
-                Log.d("MATCH", ""+randX+","+randY);
+                Log.d("MATCH", ""+randX+blockOffset+","+randY+blockOffset);
                 int NewRandomX = squareDiv*randomInt.nextInt(4);
                 int NewRandomY = squareDiv*randomInt.nextInt(4);
-                i = 0;
+                i = -1;
                 randX = NewRandomX;
                 randY = NewRandomY;
 
             }
-                Log.d("XPOS, YPOS LOOP", ""+randX+","+randY+","+i);
+
             }
-            Log.d("XPOS, YPOS Final", ""+randX+","+randY);
+            Log.d("XPOS, YPOS Final", ""+randX+blockOffset+","+randY+blockOffset);
             GameBlock newGameBlock = new GameBlock(myContext, randX+blockOffset,randY+blockOffset, myRL);//creates game block and centers it at top left
         //myRL.addView(newGameBlock);//moved to block contructor.
         return newGameBlock;
@@ -239,69 +254,135 @@ public class GameLoopTask extends TimerTask {
 
     }
 
+    private boolean testMerge()
+    {
+
+        int count = 0;
+        boolean split = false;
+        GameBlock holdBlock = null;
+        for (GameBlock thisBlock : gbList) {
+
+
+            for (int i = 0; i < gbList.size(); i++) {
+
+
+                if ((gbList.get(i).getyPos() < thisBlock.getyPos()) && (gbList.get(i).getxPos() == thisBlock.getxPos()) && (gbList.get(i).getValue() == thisBlock.getValue())) {
+                    count++;
+                    if (gbList.get(i).getyPos() == thisBlock.getyPos() - 180) {
+                        holdBlock = gbList.get(i);
+                    }
+                    if (gbList.get(i).getyPos() == thisBlock.getyPos() - 3 * 180) {
+                        split = true;
+                    }
+                }
+
+            }
+            if ((holdBlock != null) && (split == true || count == 1)) {
+
+
+                return true;
+            }
+            split = false;
+            holdBlock = null;
+            count = 0;
+
+
+            for (int i = 0; i < gbList.size(); i++) {
+
+                if ((gbList.get(i).getxPos() < thisBlock.getxPos()) && (gbList.get(i).getyPos() == thisBlock.getyPos()) && (gbList.get(i).getValue() == thisBlock.getValue())) {
+                    count++;
+                    if (gbList.get(i).getxPos() == thisBlock.getxPos() - 180) {
+                        holdBlock = gbList.get(i);
+                    }
+                    if (gbList.get(i).getxPos() == thisBlock.getxPos() - 3 * 180) {
+                        split = true;
+                    }
+                }
+
+            }
+
+
+
+
+            if ((holdBlock != null) && (split == true || count == 1)) {
+
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     synchronized public void run()
     {
 
         myActivity.runOnUiThread(new Runnable() {
             public void run() {//Insert your Periodic Tasks Here!}})
                 //Log.d("Start", ""+inMotion+","+blockAdded);
-                                for (int i = 0; i < gbList.size(); i++ )
-                                {
+                for (GameBlock temp : gbList) {
 
-                                    if((currentDir == direction.DOWN )|| (currentDir == direction.UP))
-                                    {
-                                        gbList.get(i).setDestination( getNumberBlocksInfront(gbList.get(i).getxPos(),gbList.get(i).getyPos(), gbList.get(i).getDestination()));
-                                    }
-                                    if((currentDir == direction.LEFT )|| (currentDir == direction.RIGHT))
-                                    {
-                                        gbList.get(i).setDestination( getNumberBlocksInfront(gbList.get(i).getxPos(),gbList.get(i).getyPos(),gbList.get(i).getDestination()));
-                                    }
-                                    gbList.get(i).move();
-                                    //mergeBlock(gbList.get(i));
-                                    if (gbList.get(i).getMoving() == false && i == 0) {
-                                        //Log.d("STOPED", "STOP");
-                                        //mergeBlock(gbList.get(i));
-                                        inMotion = false;
-                                    }
-                                    else if (gbList.get(i).getMoving() == false && !inMotion) {
-                                        //Log.d("STOPED", "STOP");
-                                        //mergeBlock(gbList.get(i));
-                                        inMotion = false;
-                                    } else {
-                                        //Log.d("MOVING", "MOVING");
-                                        inMotion = true;
-                                        blockAdded = false;
+                   if(temp.getValue() == 256)
+                   {
+                       gameDone = true;
+                       Log.wtf("YOU WON", "CONGRATULATIONS!");
+                   }
+                }
+                if(gbList.size() == 16 && !testMerge())
+                {
+                    gameDone = true;
+                    Log.wtf("YOU LOOSE","TRY AGAIN!");
+                }
+                if(!gameDone) {
+                    for (int i = 0; i < gbList.size(); i++) {
 
-                                    }
+                        if ((currentDir == direction.DOWN) || (currentDir == direction.UP)) {
+                            gbList.get(i).setDestination(getNumberBlocksInfront(gbList.get(i).getxPos(), gbList.get(i).getyPos(), gbList.get(i).getDestination()));
+                        }
+                        if ((currentDir == direction.LEFT) || (currentDir == direction.RIGHT)) {
+                            gbList.get(i).setDestination(getNumberBlocksInfront(gbList.get(i).getxPos(), gbList.get(i).getyPos(), gbList.get(i).getDestination()));
+                        }
+                        gbList.get(i).move();
+                        //mergeBlock(gbList.get(i));
+                        if (gbList.get(i).getMoving() == false && i == 0) {
+                            //Log.d("STOPED", "STOP");
+                            //mergeBlock(gbList.get(i));
+                            inMotion = false;
+                        } else if (gbList.get(i).getMoving() == false && !inMotion) {
+                            //Log.d("STOPED", "STOP");
+                            //mergeBlock(gbList.get(i));
+                            inMotion = false;
+                        } else {
+                            //Log.d("MOVING", "MOVING");
+                            inMotion = true;
+                            blockAdded = false;
 
-
-
-                                }
-                                for(GameBlock temp : gbList)
-                                {
-
-                                    mergeBlock(temp);
-                                }
-                                for(GameBlock temp : removeList)
-                                {
-                                    temp.cleanup(myRL);
-                                    myRL.removeView(temp);
-                                    gbList.remove(temp);
-                                    temp = null;
-                                }
-                                removeList.clear();
+                        }
 
 
-                               // Log.d("INMOTION,BLOCK ADD", ""+inMotion+","+blockAdded);
-                                if (!inMotion && !blockAdded)
-                                {
-                                    //Log.d("BLOCK ADDED", "BLOCK ADDED");
-                                    gbList.add(createBlock());
-                                    blockAdded = true;
-                                    //inMotion = true;
-                                }
+                    }
+                    for (GameBlock temp : gbList) {
+
+                        mergeBlock(temp);
+                    }
+                    for (GameBlock temp : removeList) {
+                        temp.cleanup(myRL);
+                        myRL.removeView(temp);
+                        gbList.remove(temp);
+                        temp = null;
+                    }
+                    removeList.clear();
 
 
+                    // Log.d("INMOTION,BLOCK ADD", ""+inMotion+","+blockAdded);
+                    if (!inMotion && !blockAdded) {
+                        //Log.d("BLOCK ADDED", "BLOCK ADDED");
+                        gbList.add(createBlock());
+                        blockAdded = true;
+                        //inMotion = true;
+                    }
+
+                }
             }
         });
     }
