@@ -78,7 +78,7 @@ public class MotionFSM {
 
 
             case Determined:
-                Log.d("FSM Says:", "Determined");
+             //   Log.d("FSM Says:", "Determined");
                 directionTV.setText(dirs.toString());
                 switch (dirs)
                 {
@@ -103,7 +103,7 @@ public class MotionFSM {
 
 
             case Rising:
-                Log.d("FSM Says:", "Rising");
+               // Log.d("FSM Says:", "Rising");
                 if (dirs == direction.Right)
                 {
                     if (slopeX <= 0)
@@ -169,7 +169,7 @@ public class MotionFSM {
                 break;
 
             case Stable:
-                Log.d("FSM Says:", "Falling" + count);
+                //Log.d("FSM Says:", "Falling" + count);
                 count --;
                 if( count == 0)
                 {

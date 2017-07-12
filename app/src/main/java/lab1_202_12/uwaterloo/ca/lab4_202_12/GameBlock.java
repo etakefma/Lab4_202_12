@@ -124,6 +124,8 @@ public class GameBlock extends AppCompatImageView {
     }
 
 
+
+
     public void move()
     {
         if (blockDir == GameLoopTask.direction.DOWN)

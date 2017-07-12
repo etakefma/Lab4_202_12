@@ -22,6 +22,7 @@ public class GameLoopTask extends TimerTask {
     public enum direction {UP, DOWN, LEFT, RIGHT, NO_MOTION};
     private direction currentDir = direction.NO_MOTION;
     private LinkedList<GameBlock> gbList = new LinkedList();
+    private LinkedList<GameBlock> removeList = new LinkedList();
     private Random randomInt = new Random();
     private static int squareDiv = 180;//distance between square corners to divide board
     private boolean inMotion = true;
@@ -224,11 +225,13 @@ public class GameLoopTask extends TimerTask {
 
 
             holdBlock.setValue(holdBlock.getValue() * 2);
-            thisBlock.cleanup(myRL);
+            /*thisBlock.cleanup(myRL);
             myRL.removeView(thisBlock);
             gbList.remove(thisBlock);
 
             thisBlock = null;
+            */
+            removeList.add(thisBlock);
         }
         return;
 
@@ -236,12 +239,12 @@ public class GameLoopTask extends TimerTask {
 
     }
 
-    public void run()
+    synchronized public void run()
     {
 
         myActivity.runOnUiThread(new Runnable() {
             public void run() {//Insert your Periodic Tasks Here!}})
-
+                //Log.d("Start", ""+inMotion+","+blockAdded);
                                 for (int i = 0; i < gbList.size(); i++ )
                                 {
 
@@ -254,24 +257,48 @@ public class GameLoopTask extends TimerTask {
                                         gbList.get(i).setDestination( getNumberBlocksInfront(gbList.get(i).getxPos(),gbList.get(i).getyPos(),gbList.get(i).getDestination()));
                                     }
                                     gbList.get(i).move();
-                                    if( gbList.get(i).getMoving() == false)
-                                    {
-                                        mergeBlock(gbList.get(i));
+                                    //mergeBlock(gbList.get(i));
+                                    if (gbList.get(i).getMoving() == false && i == 0) {
+                                        //Log.d("STOPED", "STOP");
+                                        //mergeBlock(gbList.get(i));
                                         inMotion = false;
-
                                     }
-                                    else
-                                    {
+                                    else if (gbList.get(i).getMoving() == false && !inMotion) {
+                                        //Log.d("STOPED", "STOP");
+                                        //mergeBlock(gbList.get(i));
+                                        inMotion = false;
+                                    } else {
+                                        //Log.d("MOVING", "MOVING");
                                         inMotion = true;
                                         blockAdded = false;
 
                                     }
 
+
+
                                 }
+                                for(GameBlock temp : gbList)
+                                {
+
+                                    mergeBlock(temp);
+                                }
+                                for(GameBlock temp : removeList)
+                                {
+                                    temp.cleanup(myRL);
+                                    myRL.removeView(temp);
+                                    gbList.remove(temp);
+                                    temp = null;
+                                }
+                                removeList.clear();
+
+
+                               // Log.d("INMOTION,BLOCK ADD", ""+inMotion+","+blockAdded);
                                 if (!inMotion && !blockAdded)
                                 {
-                                    createBlock();
+                                    //Log.d("BLOCK ADDED", "BLOCK ADDED");
+                                    gbList.add(createBlock());
                                     blockAdded = true;
+                                    //inMotion = true;
                                 }
 
 
